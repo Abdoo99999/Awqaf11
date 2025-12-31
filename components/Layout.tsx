@@ -123,7 +123,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="hidden md:flex items-center gap-4">
                 <div className="text-left">
                    <p className="text-sm font-bold text-navy-900 dark:text-white">أهلاً، {user}</p>
-                   <p className="text-xs text-gold-600 dark:text-gold-400">{role === 'admin' ? 'مدير النظام' : 'مستخدم مؤسسة'}</p>
+                   <p className="text-xs text-gold-600 dark:text-gold-400">{role === 'admin' ? 'مسؤول النظام' : 'مستخدم مؤسسة'}</p>
                 </div>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md ${role === 'admin' ? 'bg-navy-800' : 'bg-teal-600'}`}>
                     {user?.charAt(0).toUpperCase()}
