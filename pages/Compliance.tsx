@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { getInstitutions, getComplianceRecords, saveComplianceRecord, generateId, getComplianceByInstAndYear, getRisks, saveRisk, deleteRisk } from '../services/db';
 import { Institution, ComplianceRecord, RiskRegisterItem, CustomRequirement } from '../types';
 import { CURRENT_YEAR, calculateRiskScore } from '../constants';
-import { Save, AlertTriangle, CheckCircle, Info, ShieldAlert, Plus, Trash2, Scale, X, Building } from 'lucide-react';
+import { Save, AlertTriangle, CheckCircle, Info, ShieldAlert, Plus, Trash2, Scale, X, Building, Settings } from 'lucide-react';
 import { useUi } from '../contexts/UiContext';
 
 const CompliancePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'compliance' | 'risks'>('compliance');
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const { showToast, currentWaqfId } = useUi();
+  
+  // 1. جلب الصلاحية role هنا
+  const { showToast, currentWaqfId, role } = useUi();
   
   // Compliance State
   const [record, setRecord] = useState<Partial<ComplianceRecord>>({});
@@ -141,6 +143,17 @@ const CompliancePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-navy-900 dark:text-white">إدارة المخاطر والامتثال ({CURRENT_YEAR})</h2>
+        
+        {/* 2. زر المدير - يظهر فقط للمدير */}
+        {role === 'admin' && (
+             <button 
+                onClick={() => showToast('سيتم فتح نافذة إعداد المعايير', 'info')}
+                className="flex items-center gap-2 bg-navy-800 text-white px-4 py-2 rounded-lg hover:bg-navy-900 shadow-sm transition-colors text-sm"
+             >
+                <Settings size={16} />
+                تعديل معايير المؤشرات
+             </button>
+        )}
       </div>
       
       {/* Currently Viewing Banner - Replaces Selector */}
