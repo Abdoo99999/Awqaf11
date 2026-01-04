@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // أضفنا useNavigate
 import { LayoutDashboard, Building2, ClipboardCheck, Scale, FileBarChart, Menu, X, ShieldAlert, Settings, LogOut } from 'lucide-react';
 import { getSettings } from '../services/db';
 import { useUi } from '../contexts/UiContext';
 
-const SidebarItem = ({ to, icon: Icon, label, active }: any) => (
-  <Link to={to} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${active ? 'bg-navy-800 text-gold-400' : 'text-white hover:bg-navy-800/50'}`}>
+// 1. تعديل المكون ليقبل دالة onClick
+const SidebarItem = ({ to, icon: Icon, label, active, onClick }: any) => (
+  <Link 
+    to={to} 
+    onClick={onClick} // ربط حدث الضغط
+    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${active ? 'bg-navy-800 text-gold-400' : 'text-white hover:bg-navy-800/50'}`}
+  >
     <Icon size={20} />
     <span className="font-medium">{label}</span>
   </Link>
@@ -16,6 +21,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState(getSettings());
   const { isAuthenticated, logout, user, role } = useUi();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Apply Dark Mode
@@ -38,7 +44,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return () => window.removeEventListener('settingsChanged', handleSettingsChange);
   }, [settings.darkMode]);
 
-  // If not authenticated, render children directly (Login page handles its own layout mostly)
+  // If not authenticated, render children directly
   if (!isAuthenticated) {
       return <>{children}</>;
   }
@@ -56,6 +62,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Filter based on current role
   const navItems = allNavItems.filter(item => role && item.roles.includes(role));
+
+  // 2. دالة الحماية (The Guard Function)
+  const handleItemClick = (e: React.MouseEvent, path: string) => {
+    // إذا كان الرابط هو التقييم، والمستخدم هو مؤسسة (وليس مدير)، نطبق الشرط
+    if (path === '/evaluation' && role === 'user') {
+        const isCompleted = localStorage.getItem('isProfileCompleted');
+        
+        if (isCompleted !== 'true') {
+            e.preventDefault(); // منع الانتقال
+            alert('عذراً، لا يمكن الدخول لصفحة التقييم قبل إكمال وحفظ "بيانات المؤسسة" أولاً.');
+            
+            // توجيه المستخدم لصفحة البيانات إجبارياً
+            navigate('/institutions');
+            
+            // إغلاق القائمة في الموبايل إن كانت مفتوحة
+            setSidebarOpen(false); 
+        }
+    }
+    // في الحالات الأخرى، الانتقال سيحدث تلقائياً عبر Link
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans text-right" dir="rtl">
@@ -91,7 +117,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto mt-2">
           {navItems.map((item) => (
-            <SidebarItem key={item.to} {...item} active={location.pathname === item.to} />
+            <SidebarItem 
+                key={item.to} 
+                {...item} 
+                active={location.pathname === item.to}
+                // 3. تمرير الدالة هنا
+                onClick={(e: React.MouseEvent) => handleItemClick(e, item.to)}
+            />
           ))}
           <button 
             onClick={logout}
